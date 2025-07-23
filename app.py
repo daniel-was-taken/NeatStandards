@@ -31,8 +31,15 @@ MILVUS_URI = os.getenv("MILVUS_URI", "http://localhost:19530")
 milvus_client = MilvusClient(uri=MILVUS_URI)
 collection_name = "my_rag_collection"
 
+# Initialize collection once at startup
 if not milvus_client.has_collection(collection_name):
     main()
+else:
+    # Check if collection has data, populate if empty
+    stats = milvus_client.get_collection_stats(collection_name)
+    if stats['row_count'] == 0:
+        main()
+    milvus_client.load_collection(collection_name=collection_name)
 
 embedding_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
 
@@ -61,7 +68,6 @@ def retrieve_relevant_documents(query: str, limit: int = 5) -> List[Dict]:
             limit=limit,
             output_fields=["text", "metadata"]
         )
-        # print("search_results:", search_results[0])
         documents = []
         for result in search_results[0]:
             doc_info = {
@@ -128,15 +134,16 @@ def setup_rag_chain():
 When answering questions, you should:
 1. Use the provided context documents to inform your response
 2. Be accurate and helpful
-3. If the context doesn't contain relevant information, say so clearly
-4. Always reply in English
-5. Provide clear recommendations wherever applicable
-6. Do not make assumptions about the user's knowledge or background
-7. If the user asks for a specific law or regulation, provide a brief explanation and cite relevant documents if available.
-8. Do not overlook the importance of accessibility and inclusivity in your responses.
-9. Do not overemphasize disability in your responses, but rather focus on the support and adjustments that can be made to ensure equality and inclusivity.
-10. If the user asks about a specific disability, provide general information and resources, but do not make assumptions about the individual's experience or needs.
-11. If the user query explicitly asks for a disability-related topic, provide a well-informed response based on the context documents.
+3. Cite relevant documents in the format [1], [2], etc.
+4. If the context doesn't contain relevant information, say so clearly
+5. Always reply in English
+6. Provide clear recommendations wherever applicable
+7. Do not make assumptions about the user's knowledge or background
+8. If the user asks for a specific law or regulation, provide a brief explanation and cite relevant documents if available.
+9. Do not overlook the importance of accessibility and inclusivity in your responses.
+10. Do not overemphasize disability in your responses, but rather focus on the support and adjustments that can be made to ensure equality and inclusivity.
+11. If the user asks about a specific disability, provide general information and resources, but do not make assumptions about the individual's experience or needs.
+12. If the user query explicitly asks for a disability-related topic, provide a well-informed response based on the context documents.
 
 Context documents:
 {context} 

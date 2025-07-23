@@ -13,10 +13,6 @@ MILVUS_URI = os.getenv("MILVUS_URI", "http://localhost:19530")
 milvus_client = MilvusClient(uri=MILVUS_URI)
 collection_name = "my_rag_collection"
 
-# Drop existing collection if it exists
-# if milvus_client.has_collection(collection_name):
-#     milvus_client.drop_collection(collection_name)
-
 # Initialize embedding model
 embedding_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
 
@@ -24,35 +20,49 @@ def emb_text(text):
     """Generate embeddings for text using the sentence transformer model."""
     return embedding_model.encode([text], normalize_embeddings=True).tolist()[0]
 
-# Create Milvus collection schema
-schema = milvus_client.create_schema(auto_id=False, enable_dynamic_field=False)
-schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
-schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=384)  # BGE-small-en-v1.5 dimension
-schema.add_field(field_name="text", datatype=DataType.VARCHAR, max_length=32768)  # 32KB max
-schema.add_field(field_name="metadata", datatype=DataType.JSON)
+def create_collection():
+    """Create collection if it doesn't exist."""
+    if milvus_client.has_collection(collection_name):
+        milvus_client.load_collection(collection_name=collection_name)
+        return
+    
+    # Create Milvus collection schema
+    schema = milvus_client.create_schema(auto_id=False, enable_dynamic_field=False)
+    schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
+    schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=384)  # BGE-small-en-v1.5 dimension
+    schema.add_field(field_name="text", datatype=DataType.VARCHAR, max_length=32768)  # 32KB max
+    schema.add_field(field_name="metadata", datatype=DataType.JSON)
 
-# Create index for vector search
-index_params = MilvusClient.prepare_index_params()
-index_params.add_index(
-    field_name="vector",
-    metric_type="COSINE",
-    index_type="AUTOINDEX",
-)
+    # Create index for vector search
+    index_params = MilvusClient.prepare_index_params()
+    index_params.add_index(
+        field_name="vector",
+        metric_type="COSINE",
+        index_type="AUTOINDEX",
+    )
 
-# Create and load collection
-milvus_client.create_collection(
-    collection_name=collection_name,
-    schema=schema,
-    index_params=index_params,
-    consistency_level="Strong",
-)
-milvus_client.load_collection(collection_name=collection_name)
+    # Create and load collection
+    milvus_client.create_collection(
+        collection_name=collection_name,
+        schema=schema,
+        index_params=index_params,
+        consistency_level="Strong",
+    )
+    milvus_client.load_collection(collection_name=collection_name)
 
 # Document directory
 directory_path = "data/"  
 
 def main():
     """Main function to load documents and insert them into Milvus."""
+    create_collection()
+    
+    # Check if collection already has data
+    stats = milvus_client.get_collection_stats(collection_name)
+    if stats['row_count'] > 0:
+        print(f"Collection already contains {stats['row_count']} documents. Skipping insertion.")
+        return
+    
     docs = unstructured_document_loader()
     
     # Prepare data for insertion
