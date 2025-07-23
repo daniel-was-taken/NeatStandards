@@ -134,7 +134,7 @@ def setup_rag_chain():
 When answering questions, you should:
 1. Use the provided context documents to inform your response
 2. Be accurate and helpful
-3. Cite relevant documents in the format [1], [2], etc.
+3. Only provide inline citations from the context documents
 4. If the context doesn't contain relevant information, say so clearly
 5. Always reply in English
 6. Provide clear recommendations wherever applicable
