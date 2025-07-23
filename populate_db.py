@@ -14,8 +14,8 @@ milvus_client = MilvusClient(uri=MILVUS_URI)
 collection_name = "my_rag_collection"
 
 # Drop existing collection if it exists
-if milvus_client.has_collection(collection_name):
-    milvus_client.drop_collection(collection_name)
+# if milvus_client.has_collection(collection_name):
+#     milvus_client.drop_collection(collection_name)
 
 # Initialize embedding model
 embedding_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
