@@ -205,3 +205,21 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+# Google Client Secrets
+*.json
+
+# Production secrets and environment files
+.env
+.env.local
+.env.production
+.env.staging
+
+secrets/
+
+# DigitalOcean App Platform
+.do/
+
+# Docker volumes (production)
+volumes/
