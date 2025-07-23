@@ -74,6 +74,7 @@ services:
     environment:
       - MILVUS_URI=http://standalone:19530
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PASSWORD=${PASSWORD}
     depends_on:
       - standalone
 
