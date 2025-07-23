@@ -181,8 +181,7 @@ def auth(username: str, password: str) -> Optional[cl.User]:
     if (username, password) == ("admin", os.getenv("PASSWORD")):
         return cl.User(
             identifier="admin",
-            metadata={"role": "admin", "provider": "credentials"},
-            id="admin_id"
+            metadata={"role": "admin", "provider": "credentials"}
         )
     return None
 
