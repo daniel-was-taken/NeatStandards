@@ -1,12 +1,16 @@
 import time
+import os
 from pathlib import Path
 from unstructured.cleaners.core import clean_extra_whitespace, replace_unicode_quotes, clean_dashes, group_broken_paragraphs
 from langchain_unstructured import UnstructuredLoader
 from sentence_transformers import SentenceTransformer
 from pymilvus import MilvusClient, DataType
 
+import os
+
 # Initialize Milvus client and collection setup
-milvus_client = MilvusClient(uri="http://localhost:19530")
+MILVUS_URI = os.getenv("MILVUS_URI", "http://localhost:19530")
+milvus_client = MilvusClient(uri=MILVUS_URI)
 collection_name = "my_rag_collection"
 
 # Drop existing collection if it exists
