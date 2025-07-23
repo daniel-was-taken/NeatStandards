@@ -178,7 +178,7 @@ Please provide a clear response using the above context"""
 # Authentication
 @cl.password_auth_callback
 def auth(username: str, password: str) -> Optional[cl.User]:
-    if (username, password) == ("admin", SecretStr(os.getenv("PASSWORD"))):
+    if (username, password) == ("admin", os.getenv("PASSWORD")):
         return cl.User(
             identifier="admin",
             metadata={"role": "admin", "provider": "credentials"},
