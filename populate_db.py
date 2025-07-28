@@ -120,62 +120,75 @@ def main():
     
     docs = unstructured_document_loader()
     
-    # Prepare texts for batch processing
-    texts_to_embed = []
-    doc_data = []
+    # Process documents in small chunks to avoid memory issues on 4GB droplet
+    chunk_size = 100  # Very conservative chunk size for 4GB memory
+    total_docs = len(docs)
+    total_chunks = (total_docs + chunk_size - 1) // chunk_size
     
-    print(f"Preparing {len(docs)} documents for batch processing...")
+    print(f"🔧 Memory-efficient processing: {total_docs} documents in {total_chunks} chunks of {chunk_size}")
+    print("📊 This approach prevents OOM kills on your 4GB DigitalOcean droplet")
     
-    for i, doc in enumerate(docs):
-        # Check text length and truncate if necessary
-        text_content = doc.page_content
-        if len(text_content) > 65000:  # Leave some buffer below 64KB limit
-            text_content = text_content[:65000]
-            print(f"Document {i+1} truncated from {len(doc.page_content)} to {len(text_content)} characters")
+    total_inserted = 0
+    
+    for chunk_idx in range(0, total_docs, chunk_size):
+        chunk_end = min(chunk_idx + chunk_size, total_docs)
+        chunk_num = chunk_idx // chunk_size + 1
         
-        texts_to_embed.append(text_content)
-        doc_data.append({
-            "id": i,
-            "text": text_content,
-            "metadata": doc.metadata if doc.metadata else {}
-        })
+        print(f"\n{'='*40}")
+        print(f"CHUNK {chunk_num}/{total_chunks} | Docs {chunk_idx + 1}-{chunk_end}")
+        print(f"{'='*40}")
         
-        # Print progress every 500 documents
-        if (i + 1) % 500 == 0:
-            print(f"Prepared {i + 1}/{len(docs)} documents")
-    
-    # Process embeddings in batches
-    all_embeddings = process_embeddings_in_batches(texts_to_embed, batch_size=25)  # Smaller batch size for better reliability
-    
-    # Prepare data for insertion
-    data_to_insert = []
-    
-    print(f"Preparing {len(doc_data)} documents for Milvus insertion...")
-    
-    for i, (doc_info, embedding) in enumerate(zip(doc_data, all_embeddings)):
-        data_entry = {
-            "id": doc_info["id"],
-            "vector": embedding,
-            "text": doc_info["text"],
-            "metadata": doc_info["metadata"]
-        }
-        data_to_insert.append(data_entry)
+        # Get current chunk of documents
+        current_chunk = docs[chunk_idx:chunk_end]
         
-        # Print progress every 500 documents
-        if (i + 1) % 500 == 0:
-            print(f"Prepared {i + 1}/{len(doc_data)} entries for insertion")
+        # Process this chunk
+        texts_to_embed = []
+        doc_data = []
+        
+        for i, doc in enumerate(current_chunk):
+            text_content = doc.page_content
+            if len(text_content) > 65000:
+                text_content = text_content[:65000]
+                print(f"📄 Doc {chunk_idx + i + 1} truncated: {len(doc.page_content)} → {len(text_content)} chars")
+            
+            texts_to_embed.append(text_content)
+            doc_data.append({
+                "id": chunk_idx + i,
+                "text": text_content,
+                "metadata": doc.metadata if doc.metadata else {}
+            })
+        
+        # Generate embeddings with small batch size
+        print(f"🚀 Generating embeddings for {len(texts_to_embed)} documents...")
+        all_embeddings = process_embeddings_in_batches(texts_to_embed, batch_size=5)  # Very small batches
+        
+        # Prepare and insert data
+        data_to_insert = []
+        for doc_info, embedding in zip(doc_data, all_embeddings):
+            data_to_insert.append({
+                "id": doc_info["id"],
+                "vector": embedding,
+                "text": doc_info["text"],
+                "metadata": doc_info["metadata"]
+            })
+        
+        # Insert to Milvus
+        insert_result = milvus_client.insert(collection_name=collection_name, data=data_to_insert)
+        chunk_inserted = insert_result['insert_count']
+        total_inserted += chunk_inserted
+        
+        print(f"✅ Chunk {chunk_num} complete: {chunk_inserted} docs inserted")
+        print(f"📈 Overall progress: {total_inserted}/{total_docs} ({(total_inserted/total_docs)*100:.1f}%)")
+        
+        # Critical: Free memory before next chunk
+        del texts_to_embed, doc_data, all_embeddings, data_to_insert, current_chunk
+        
+        # Brief pause between chunks
+        if chunk_num < total_chunks:
+            print("⏱️ Memory cleanup pause (2s)...")
+            time.sleep(2)
     
-    print(f"Inserting {len(data_to_insert)} documents into Milvus...")
-    
-    # Insert data into Milvus
-    insert_result = milvus_client.insert(
-        collection_name=collection_name,
-        data=data_to_insert
-    )
-    
-    print(f"Successfully inserted {insert_result['insert_count']} documents")
-    print(f"Primary keys: {insert_result['ids'][:10]}...")  # Show first 10 IDs
-    
+    print(f"\n🎉 SUCCESS! All {total_inserted} documents processed and inserted!")
     return docs
 
 def unstructured_document_loader():
