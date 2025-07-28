@@ -67,7 +67,8 @@ model = ChatNebius(
 
 def emb_text(text: str) -> List[float]:
     """Generate embeddings for text using the sentence transformer model."""
-    return embedding_model.encode([text], normalize_embeddings=True).tolist()[0]
+    return embedding_model.embed_query(text)
+    # return embedding_model.encode([text], normalize_embeddings=True).tolist()[0]
 
 def retrieve_relevant_documents(query: str, limit: int = 5) -> List[Dict]:
     """Retrieve relevant documents from Milvus based on the query."""

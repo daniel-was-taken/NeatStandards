@@ -26,7 +26,8 @@ embedding_model = NebiusEmbeddings(
 
 def emb_text(text):
     """Generate embeddings for text using the sentence transformer model."""
-    return embedding_model.encode([text], normalize_embeddings=True).tolist()[0]
+    return embedding_model.embed_query(text)
+    # return embedding_model.encode([text], normalize_embeddings=True).tolist()[0]
 
 def create_collection():
     """Create collection if it doesn't exist."""
@@ -37,7 +38,7 @@ def create_collection():
     # Create Milvus collection schema
     schema = milvus_client.create_schema(auto_id=False, enable_dynamic_field=False)
     schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
-    schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=1024)  # Qwen/Qwen3-Embedding-0.6B dimension
+    schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=4096)  # Qwen/Qwen3-Embedding-8B dimension
     schema.add_field(field_name="text", datatype=DataType.VARCHAR)  # 32KB max
     schema.add_field(field_name="metadata", datatype=DataType.JSON)
 
