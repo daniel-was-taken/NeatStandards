@@ -11,6 +11,7 @@ from pydantic import SecretStr
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_nebius import ChatNebius
+
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough, RunnableLambda
@@ -18,7 +19,10 @@ from langchain.schema.runnable.config import RunnableConfig
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
 from pymilvus import MilvusClient
+
 from sentence_transformers import SentenceTransformer
+from langchain_nebius import NebiusEmbeddings
+
 from chainlit.input_widget import Select, Switch, Slider
 
 from langchain_core.documents import Document
@@ -42,7 +46,14 @@ else:
     milvus_client.load_collection(collection_name=collection_name)
 
 # embedding_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
-embedding_model = SentenceTransformer("Qwen/Qwen3-Embedding-0.6B")
+# embedding_model = SentenceTransformer("Qwen/Qwen3-Embedding-0.6B")
+
+embedding_model = NebiusEmbeddings(
+    api_key=SecretStr(os.getenv("OPENAI_API_KEY")),
+    model="Qwen/Qwen3-Embedding-8B" 
+)
+
+
 # Initialize LLM
 model = ChatNebius(
     model="Qwen/Qwen3-14B",
@@ -256,7 +267,7 @@ async def on_chat_resume(thread: ThreadDict):
             messages.append(AIMessage(content=message["output"]))
 
     cl.user_session.set("messages", messages)
-    
+
     settings = await cl.ChatSettings(
         [
             Switch(id="Think", label="Use Deep Thinking", initial=True),
