@@ -39,7 +39,7 @@ def create_collection():
     schema = milvus_client.create_schema(auto_id=False, enable_dynamic_field=False)
     schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
     schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=4096)  # Qwen/Qwen3-Embedding-8B dimension
-    schema.add_field(field_name="text", datatype=DataType.VARCHAR, max_length=65536)  # 64KB max
+    schema.add_field(field_name="text", datatype=DataType.VARCHAR, max_length=65535)  # Maximum allowed for VARCHAR
     schema.add_field(field_name="metadata", datatype=DataType.JSON)
 
     # Create index for vector search
