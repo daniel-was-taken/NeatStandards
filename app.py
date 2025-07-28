@@ -1,11 +1,15 @@
 import os
 from typing import Dict, List, Optional
 from operator import itemgetter
+from dotenv import load_dotenv
 
 import chainlit as cl
 from chainlit.types import ThreadDict
 from chainlit.data.sql_alchemy import SQLAlchemyDataLayer
 from pydantic import SecretStr
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 from langchain.chains import create_retrieval_chain
