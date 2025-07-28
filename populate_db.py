@@ -14,8 +14,8 @@ milvus_client = MilvusClient(uri=MILVUS_URI)
 collection_name = "my_rag_collection"
 
 # Initialize embedding model
-embedding_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
-
+# embedding_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
+embedding_model = SentenceTransformer("Qwen/Qwen3-Embedding-0.6B")
 def emb_text(text):
     """Generate embeddings for text using the sentence transformer model."""
     return embedding_model.encode([text], normalize_embeddings=True).tolist()[0]
@@ -29,8 +29,8 @@ def create_collection():
     # Create Milvus collection schema
     schema = milvus_client.create_schema(auto_id=False, enable_dynamic_field=False)
     schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
-    schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=384)  # BGE-small-en-v1.5 dimension
-    schema.add_field(field_name="text", datatype=DataType.VARCHAR, max_length=32768)  # 32KB max
+    schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=1024)  # Qwen/Qwen3-Embedding-0.6B dimension
+    schema.add_field(field_name="text", datatype=DataType.VARCHAR)  # 32KB max
     schema.add_field(field_name="metadata", datatype=DataType.JSON)
 
     # Create index for vector search

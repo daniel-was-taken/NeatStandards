@@ -41,8 +41,8 @@ else:
         main()
     milvus_client.load_collection(collection_name=collection_name)
 
-embedding_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
-
+# embedding_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
+embedding_model = SentenceTransformer("Qwen/Qwen3-Embedding-0.6B")
 # Initialize LLM
 model = ChatNebius(
     model="Qwen/Qwen3-14B",
@@ -129,26 +129,24 @@ def setup_rag_chain():
             "context": doc_objects,
             "history": cl.user_session.get("messages", [])
         }
-    system_prompt = """You are a helpful assistant specialising in disability support, reasonable adjustments, and equality legislation.
+    system_prompt = """You are a helpful assistant specialising in developing non-discriminatory competence standards and disability support, reasonable adjustments, and equality legislation.
 
 When answering questions, you should:
 1. Use the provided context documents to inform your response
 2. Be accurate and helpful
-3. Only provide inline citations from the context documents
-4. If the context doesn't contain relevant information, say so clearly
-5. Always reply in English
-6. Provide clear recommendations wherever applicable
-7. Do not make assumptions about the user's knowledge or background
-8. If the user asks for a specific law or regulation, provide a brief explanation and cite relevant documents if available.
-9. Do not overlook the importance of accessibility and inclusivity in your responses.
-10. Do not overemphasize disability in your responses, but rather focus on the support and adjustments that can be made to ensure equality and inclusivity.
-11. If the user asks about a specific disability, provide general information and resources, but do not make assumptions about the individual's experience or needs.
-12. If the user query explicitly asks for a disability-related topic, provide a well-informed response based on the context documents.
+3. If the context doesn't contain relevant information, say so clearly
+4. Always reply in English
+5. Provide clear recommendations and examples wherever applicable
+6. Do not make assumptions about the user's knowledge or background
+7. If the user asks for a specific law or regulation, provide a brief explanation and cite relevant documents if available.
+8. Do not overemphasize disability in your responses, but rather focus on the support and adjustments that can be made to ensure equality and inclusivity.
+9. If the user query explicitly asks for a disability-related topic, provide a well-informed response based on the context documents.
 
 Context documents:
 {context} 
 
-Please provide a clear response using the above context"""
+Please provide a clear response using the above context
+"""
 
     # Get the current settings to check if Think mode is enabled
     settings = cl.user_session.get("settings", {})
@@ -236,7 +234,7 @@ async def on_chat_start():
 
 @cl.on_settings_update
 async def setup_agent(settings):
-    print("on_settings_update", settings)
+    # print("on_settings_update", settings)
     # Store the settings in the user session so they can be accessed in setup_rag_chain
     cl.user_session.set("settings", settings)
     
@@ -259,7 +257,15 @@ async def on_chat_resume(thread: ThreadDict):
 
     cl.user_session.set("messages", messages)
     
+    settings = await cl.ChatSettings(
+        [
+            Switch(id="Think", label="Use Deep Thinking", initial=True),
+        ]
+    ).send()
 
+    # Store initial settings
+    cl.user_session.set("settings", {"Think": True})  # Set the default value
+    # TODO: # Reinitialize the chain with the current settings
     chain = setup_rag_chain()
     cl.user_session.set("chain", chain)
 
