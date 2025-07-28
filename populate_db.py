@@ -1,6 +1,7 @@
 import time
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 from unstructured.cleaners.core import clean_extra_whitespace, replace_unicode_quotes, clean_dashes, group_broken_paragraphs
 from langchain_unstructured import UnstructuredLoader
 from sentence_transformers import SentenceTransformer
@@ -8,6 +9,9 @@ from pymilvus import MilvusClient, DataType
 from langchain_nebius import NebiusEmbeddings
 from pydantic import SecretStr
 import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Initialize Milvus client and collection setup
 MILVUS_URI = os.getenv("MILVUS_URI", "http://localhost:19530")
@@ -18,8 +22,9 @@ collection_name = "my_rag_collection"
 # embedding_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
 # embedding_model = SentenceTransformer("Qwen/Qwen3-Embedding-0.6B")
 embedding_model = NebiusEmbeddings(
-    api_key=SecretStr(os.getenv("OPENAI_API_KEY")),
-    model="Qwen/Qwen3-Embedding-8B" 
+    api_key=SecretStr(os.getenv("NEBIUS_API_KEY", os.getenv("OPENAI_API_KEY"))),
+    model="Qwen/Qwen3-Embedding-8B",
+    base_url="https://api.studio.nebius.ai/v1"
 )
 
 
