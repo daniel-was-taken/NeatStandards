@@ -74,6 +74,7 @@ services:
     environment:
       - MILVUS_URI=http://standalone:19530
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - NEBIUS_API_KEY=${NEBIUS_API_KEY}
       - PASSWORD=${PASSWORD}
       - CHAINLIT_AUTH_SECRET=${CHAINLIT_AUTH_SECRET}
       - OAUTH_GOOGLE_CLIENT_ID=${OAUTH_GOOGLE_CLIENT_ID}
