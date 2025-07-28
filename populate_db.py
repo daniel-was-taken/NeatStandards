@@ -34,6 +34,47 @@ def emb_text(text):
     return embedding_model.embed_query(text)
     # return embedding_model.encode([text], normalize_embeddings=True).tolist()[0]
 
+def emb_text_batch(texts):
+    """Generate embeddings for multiple texts in batch - more efficient."""
+    return embedding_model.embed_documents(texts)
+
+def process_embeddings_in_batches(texts_to_embed, batch_size=50):
+    """Process embeddings in batches with error handling and fallback."""
+    all_embeddings = []
+    
+    print(f"Generating embeddings in batches of {batch_size}...")
+    
+    for i in range(0, len(texts_to_embed), batch_size):
+        batch_texts = texts_to_embed[i:i + batch_size]
+        batch_end = min(i + batch_size, len(texts_to_embed))
+        
+        print(f"Processing embedding batch {i//batch_size + 1}/{(len(texts_to_embed) + batch_size - 1)//batch_size} (documents {i+1}-{batch_end})")
+        
+        try:
+            batch_embeddings = emb_text_batch(batch_texts)
+            all_embeddings.extend(batch_embeddings)
+            
+            # Add a small delay between batches to be respectful to the API
+            time.sleep(1.5)
+            
+        except Exception as e:
+            print(f"Error processing batch {i//batch_size + 1}: {e}")
+            print("Falling back to individual processing for this batch...")
+            
+            # Fallback to individual processing for this batch
+            for j, text in enumerate(batch_texts):
+                try:
+                    embedding = emb_text(text)
+                    all_embeddings.append(embedding)
+                    print(f"  Individual embedding {i+j+1} completed")
+                    time.sleep(2)  # Longer delay for individual requests
+                except Exception as individual_error:
+                    print(f"  Failed to process document {i+j+1}: {individual_error}")
+                    # Use a zero vector as fallback
+                    all_embeddings.append([0.0] * 4096)
+    
+    return all_embeddings
+
 def create_collection():
     """Create collection if it doesn't exist."""
     if milvus_client.has_collection(collection_name):
@@ -79,10 +120,11 @@ def main():
     
     docs = unstructured_document_loader()
     
-    # Prepare data for insertion
-    data_to_insert = []
+    # Prepare texts for batch processing
+    texts_to_embed = []
+    doc_data = []
     
-    print(f"Processing {len(docs)} documents for insertion...")
+    print(f"Preparing {len(docs)} documents for batch processing...")
     
     for i, doc in enumerate(docs):
         # Check text length and truncate if necessary
@@ -91,22 +133,37 @@ def main():
             text_content = text_content[:65000]
             print(f"Document {i+1} truncated from {len(doc.page_content)} to {len(text_content)} characters")
         
-        # Generate embedding for the document content
-        embedding = emb_text(text_content)
-        
-        # Prepare the data entry
-        data_entry = {
+        texts_to_embed.append(text_content)
+        doc_data.append({
             "id": i,
-            "vector": embedding,
             "text": text_content,
             "metadata": doc.metadata if doc.metadata else {}
-        }
+        })
         
+        # Print progress every 500 documents
+        if (i + 1) % 500 == 0:
+            print(f"Prepared {i + 1}/{len(docs)} documents")
+    
+    # Process embeddings in batches
+    all_embeddings = process_embeddings_in_batches(texts_to_embed, batch_size=25)  # Smaller batch size for better reliability
+    
+    # Prepare data for insertion
+    data_to_insert = []
+    
+    print(f"Preparing {len(doc_data)} documents for Milvus insertion...")
+    
+    for i, (doc_info, embedding) in enumerate(zip(doc_data, all_embeddings)):
+        data_entry = {
+            "id": doc_info["id"],
+            "vector": embedding,
+            "text": doc_info["text"],
+            "metadata": doc_info["metadata"]
+        }
         data_to_insert.append(data_entry)
         
-        # Print progress every 100 documents
-        if (i + 1) % 100 == 0:
-            print(f"Processed {i + 1}/{len(docs)} documents")
+        # Print progress every 500 documents
+        if (i + 1) % 500 == 0:
+            print(f"Prepared {i + 1}/{len(doc_data)} entries for insertion")
     
     print(f"Inserting {len(data_to_insert)} documents into Milvus...")
     
