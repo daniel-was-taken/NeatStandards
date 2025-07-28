@@ -5,7 +5,8 @@ from unstructured.cleaners.core import clean_extra_whitespace, replace_unicode_q
 from langchain_unstructured import UnstructuredLoader
 from sentence_transformers import SentenceTransformer
 from pymilvus import MilvusClient, DataType
-
+from langchain_nebius import NebiusEmbeddings
+from pydantic import SecretStr
 import os
 
 # Initialize Milvus client and collection setup
@@ -15,7 +16,14 @@ collection_name = "my_rag_collection"
 
 # Initialize embedding model
 # embedding_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
-embedding_model = SentenceTransformer("Qwen/Qwen3-Embedding-0.6B")
+# embedding_model = SentenceTransformer("Qwen/Qwen3-Embedding-0.6B")
+embedding_model = NebiusEmbeddings(
+    api_key=SecretStr(os.getenv("OPENAI_API_KEY")),
+    model="Qwen/Qwen3-Embedding-8B" 
+)
+
+
+
 def emb_text(text):
     """Generate embeddings for text using the sentence transformer model."""
     return embedding_model.encode([text], normalize_embeddings=True).tolist()[0]
