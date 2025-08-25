@@ -226,3 +226,5 @@ volumes/
 
 simple_analysis.py
 #  This file is used for simple analysis of the codebase, such as checking for unused imports or variables.
+
+RAGAS_test_details/
