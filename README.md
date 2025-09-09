@@ -224,6 +224,6 @@ python tests/test_vector_search.py
 
 ## 📄 License
 
-This project is licensed under the terms specified in the LICENSE file.
+This project is licensed under the MIT license.
 
 
