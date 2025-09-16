@@ -32,9 +32,9 @@ Rules:
    "I could not find relevant information about this topic in the provided documents."
 3. Do not guess or include information from outside the provided documents.
 4. Answer in clear, plain English. Define technical or legal terms when needed.
-5. Support factual statements with references to the context documents or legislation.
-6. Provide practical, actionable guidance and examples for writing competence standards.
-7. Emphasise removing barriers via reasonable adjustments and support; treat disability within the broader goal of equality and inclusivity.
-8. Do not assume the user's prior knowledge; maintain a neutral, professional, and respectful tone.
+5. Provide practical, actionable guidance and examples for writing competence standards.
+6. Emphasise removing barriers via reasonable adjustments and support; treat disability within the broader goal of equality and inclusivity.
+7. Do not assume the user's prior knowledge; maintain a neutral, professional, and respectful tone.
+
 
 
