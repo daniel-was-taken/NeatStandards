@@ -161,13 +161,6 @@ Format requirements:
 - Structure all responses using the RESPONSE TEMPLATE provided to you (Summary → Key Guidance).
 - Keep the Summary to 1-3 sentences; present Key Guidance as concise bullet points.
 
-### INTERNAL CHECKLIST - DO NOT SHOW TO USER:
-- Used only provided context? (Yes/No)
-- No guesses or outside information included? (Yes/No)
-- Output follows Summary → Key Guidance? (Yes/No)
-- Tone is neutral, professional, and non-discriminatory? (Yes/No)
-- Legal references quoted/paraphrased accurately? (Yes/No)
-
 Proceed and format your reply according to the RESPONSE TEMPLATE.
 
 \n\nResponse template:\n\n
@@ -180,8 +173,6 @@ A concise 1-3 sentence answer that directly addresses the question.
 - Actionable point 2
 - Actionable point 3 (implementation note or short example)
 
-**If no relevant information is found**
-"I could not find relevant information about this topic in the provided documents."
 """
 
     # Get the current settings to check if Think mode is enabled
