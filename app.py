@@ -60,9 +60,10 @@ embedding_model = NebiusEmbeddings(
 
 # Initialize LLM
 model = ChatNebius(
-    model="Qwen/Qwen3-14B",
-    streaming=True,
-    temperature=0.7,
+    model="meta-llama/Llama-3.3-70B-Instruct",
+    streaming=False, # Change for Production
+    temperature=0.0,
+    max_tokens=8192,
     top_p=0.95,
     api_key=SecretStr(os.getenv("OPENAI_API_KEY")),
 )
