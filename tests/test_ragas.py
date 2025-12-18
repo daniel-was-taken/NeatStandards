@@ -1,6 +1,6 @@
 from datasets import Dataset
 from app import retrieve_relevant_documents, emb_text, model, embedding_model
-from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.schema.runnable import RunnableLambda
 from langchain_core.documents import Document

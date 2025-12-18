@@ -12,8 +12,8 @@ from pydantic import SecretStr
 load_dotenv()
 
 
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_classic.chains import create_retrieval_chain
+from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_nebius import ChatNebius
 
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -62,7 +62,7 @@ embedding_model = NebiusEmbeddings(
 model = ChatNebius(
     model="meta-llama/Llama-3.3-70B-Instruct",
     streaming=False, # Change for Production
-    temperature=0.0,
+    temperature=0.2,
     max_tokens=8192,
     top_p=0.95,
     api_key=SecretStr(os.getenv("OPENAI_API_KEY")),
