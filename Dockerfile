@@ -19,12 +19,23 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application's code into the container at /app
 COPY . .
 
-# Make port 8000 available to the world outside this container
+# Copy and make entrypoint executable
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
+# Make port 8000 available to the world outside this container (for local dev)
 EXPOSE 8000
 
+# Run the entrypoint script when the container launches
+ENTRYPOINT ["./entrypoint.sh"]
+
+# Make port 8000 available to the world outside this container
+# EXPOSE 8000
+
 # Define environment variable
-ENV CHAINLIT_HOST=0.0.0.0
-ENV CHAINLIT_PORT=8000
+# ENV CHAINLIT_HOST=0.0.0.0
+# ENV CHAINLIT_PORT=8000
 
 # Run app.py when the container launches
-CMD ["chainlit", "run", "app.py"]
+# CMD ["chainlit", "run", "app.py"]
+# CMD chainlit run app.py --host 0.0.0.0 --port ${PORT:-8000} --headless
