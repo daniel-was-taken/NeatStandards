@@ -17,10 +17,10 @@ jobs:
       - name: Add Hugging Face remote
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git remote add hf https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI
+        run: git remote add hf https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI.git
       
       - name: Pull from Hugging Face
-        run: git pull hf main --allow-unrelated-histories  # Merges HF changes; use --allow-unrelated-histories if histories differ (common on first sync)
+        run: git pull hf main --allow-unrelated-histories --no-rebase  # Merge strategy to reconcile unrelated histories
       
       - name: Push to Hugging Face
         run: git push hf main
