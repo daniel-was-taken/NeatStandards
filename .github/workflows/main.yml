@@ -30,7 +30,8 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "$HF_TOKEN" | xet login --token-stdin
+          export PATH=$HOME/.xet/bin:$PATH
+          echo "$HF_TOKEN" | git xet login --token-stdin
 
       # --------------------------------------------------
       # Git configuration
