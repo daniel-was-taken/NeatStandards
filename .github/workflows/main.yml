@@ -61,7 +61,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           # Reapply clean filters so binaries are stored via xet
-          git add --renormalize data || true
+          git add --renormalize data .gitattributes || true
           git status
           git commit -m "ci: xet-encode binaries for HF" || true
           git fetch hf main || true
