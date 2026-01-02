@@ -23,7 +23,8 @@ jobs:
           curl -L -o git-xet.tar.gz https://github.com/xetdata/xet-tools/releases/latest/download/xet-linux-x86_64.tar.gz
           sudo tar -xzf git-xet.tar.gz -C /usr/local/bin/
           git-xet --version
-          git xet install
+          git xet install --force
+          rm -f git-xet.tar.gz
 
       # --------------------------------------------------
       # Authenticate git-xet against Hugging Face
@@ -63,4 +64,5 @@ jobs:
           git add --renormalize data || true
           git status
           git commit -m "ci: xet-encode binaries for HF" || true
-          git push hf HEAD:main
+          git fetch hf main || true
+          git push hf HEAD:main --force-with-lease
