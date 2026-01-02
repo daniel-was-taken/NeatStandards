@@ -1,0 +1,31 @@
+name: Sync to Hugging Face hub
+on:
+  push:
+    branches: [main]
+  # to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Keeps full history for better merging
+          lfs: true       # Good if your repo uses Git LFS (e.g., for models/datasets)
+      
+      - name: Add Hugging Face remote
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: git remote add hf https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI.git
+      
+      - name: Configure Git User
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+      
+      - name: Pull from Hugging Face
+        run: git pull hf main --allow-unrelated-histories --no-rebase  # Merge strategy to reconcile unrelated histories
+      
+      - name: Push to Hugging Face
+        run: git push hf main
