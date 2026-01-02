@@ -2,7 +2,7 @@ from pymilvus import MilvusClient
 import os
 # Initialize client
 MILVUS_URI = os.getenv("MILVUS_URI", "http://localhost:19530")
-milvus_client = MilvusClient(uri=MILVUS_URI)
+milvus_client = MilvusClient(uri=MILVUS_URI, token=os.getenv("MILVUS_API_KEY"))
 collection_name = "my_rag_collection"
 
 # Delete the collection

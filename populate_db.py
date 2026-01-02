@@ -29,7 +29,7 @@ MAX_CHARACTERS = 1500
 COMBINE_TEXT_UNDER_N_CHARS = 200
 
 # Initialize clients
-milvus_client = MilvusClient(uri=MILVUS_URI)
+milvus_client = MilvusClient(uri=MILVUS_URI, token=os.getenv("MILVUS_API_KEY"))
 
 embedding_model = NebiusEmbeddings(
     api_key=SecretStr(os.getenv("NEBIUS_API_KEY", os.getenv("OPENAI_API_KEY"))),

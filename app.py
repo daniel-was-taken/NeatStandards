@@ -16,10 +16,10 @@ from langchain_classic.chains import create_retrieval_chain
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_nebius import ChatNebius
 
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.runnable import RunnablePassthrough, RunnableLambda
-from langchain.schema.runnable.config import RunnableConfig
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
+from langchain_core.runnables.config import RunnableConfig
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
 from pymilvus import MilvusClient
@@ -36,7 +36,7 @@ from populate_db import main
 
 # Initialize Milvus client and embedding model
 MILVUS_URI = os.getenv("MILVUS_URI", "http://localhost:19530")
-milvus_client = MilvusClient(uri=MILVUS_URI)
+milvus_client = MilvusClient(uri=MILVUS_URI, token=os.getenv("MILVUS_API_KEY"))
 collection_name = "my_rag_collection"
 
 # Initialize collection once at startup
@@ -60,8 +60,8 @@ embedding_model = NebiusEmbeddings(
 
 # Initialize LLM
 model = ChatNebius(
-    model="meta-llama/Llama-3.3-70B-Instruct",
-    streaming=False, # Change for Production
+    model="Qwen/Qwen3-235B-A22B-Instruct-2507",
+    streaming=True,
     temperature=0.2,
     max_tokens=8192,
     top_p=0.95,
@@ -159,20 +159,21 @@ Rules:
 7. Do not assume the user's prior knowledge; maintain a neutral, professional, and respectful tone.
 
 Format requirements:
-- Structure all responses using the RESPONSE TEMPLATE provided to you (Summary → Key Guidance).
-- Keep the Summary to 1-3 sentences; present Key Guidance as concise bullet points.
+- Structure all responses using the RESPONSE TEMPLATE provided below.
+- Use bolding for headers (e.g. **Summary**)
+- Ensure there is a blank line before and after lists.
 
-Proceed and format your reply according to the RESPONSE TEMPLATE.
-
-\n\nResponse template:\n\n
+Response template:
 
 **Summary**
-A concise 1-3 sentence answer that directly addresses the question.
+
+[Insert a concise 1-3 sentence answer here]
 
 **Key Guidance**
-- Actionable point 1 
-- Actionable point 2
-- Actionable point 3 (implementation note or short example)
+
+* [Actionable point 1]
+* [Actionable point 2]
+* [Actionable point 3]
 
 """
 
@@ -299,31 +300,47 @@ async def on_chat_resume(thread: ThreadDict):
 
 @cl.on_message
 async def on_message(message: cl.Message):
-    
     """Handle incoming messages with RAG and conversation history."""
     chain = cl.user_session.get("chain")
     messages = cl.user_session.get("messages", [])
+    
+    # 1. Initialize callback with stream_final_answer=True
+    # This automatically creates an empty message and streams tokens into it
     cb = cl.AsyncLangchainCallbackHandler(
-        stream_final_answer=True, answer_prefix_tokens=["</think> "]
+        stream_final_answer=True,
     )
     
     try:
-        # Get the relevant documents for citations
+        # Get relevant documents first (fast)
         relevant_docs = retrieve_relevant_documents(message.content, limit=5)
         citations = format_docs_with_id(relevant_docs)
         
-        answer = await chain.ainvoke({"question": message.content}, config=RunnableConfig(callbacks=[cb]))
+        # 2. Invoke the chain with the callback
+        # The chain will stream chunks to 'cb', which updates the UI in real-time
+        # We assign the final result to 'res' just to store it in history
+        answer = await chain.ainvoke(
+            {"question": message.content}, 
+            config=RunnableConfig(callbacks=[cb])
+        )
         
+        await cl.Message(answer).send()
+        
+        # 'res' is usually a dict if the chain returns a dict, or a string.
+        # Based on your StrOutputParser usage, it should be a string.
+        # If your chain returns a dict, you might need to extract the text.
+        # answer = res if isinstance(res, str) else res.get("output", "") or res.get("text", "")
+
+        # 3. Add References as a Step (Collapsible element under the message)
+        # Note: Since the message is already sent by the callback, we just append a step.
         async with cl.Step(name="References") as step:
             if relevant_docs:
                 step.output = citations
             else:
                 step.output = "No relevant documents found for this query."
 
-        # Update conversation history
+        # 4. Update History
         messages.append(HumanMessage(content=message.content))
         messages.append(AIMessage(content=answer))
-
         cl.user_session.set("messages", messages)
         
     except Exception as e:

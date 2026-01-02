@@ -9,7 +9,7 @@ COLLECTION_NAME = "my_rag_collection"
 DOCUMENT_DIR = "data/"
 EMBEDDING_DIMENSION = 4096
 
-milvus_client = MilvusClient(uri=MILVUS_URI)
+milvus_client = MilvusClient(uri=MILVUS_URI, token=os.getenv("MILVUS_API_KEY"))
 
 TEXT_MAX_LENGTH = 65000
 CHUNK_SIZE = 100
