@@ -32,7 +32,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git xet login --user "daniel-was-taken" --email "actions@github.com" --password "$HF_TOKEN" --host huggingface.co
+          git xet login --user "daniel-was-taken" --email "actions@github.com" --password "$HF_TOKEN" --host huggingface.co --force
 
       # --------------------------------------------------
       # Git configuration
