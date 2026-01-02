@@ -16,31 +16,10 @@ jobs:
           fetch-depth: 0
 
       # --------------------------------------------------
-      # Install Xet (Manual Install)
+      # Install Git LFS (Standard for Hugging Face)
       # --------------------------------------------------
-      - name: Install Xet
-        run: |
-          # Download the latest release
-          curl -L -o git-xet.tar.gz https://github.com/xetdata/xet-tools/releases/latest/download/xet-linux-x86_64.tar.gz
-          
-          # Extract to /usr/local/bin (requires sudo)
-          sudo tar -xzf git-xet.tar.gz -C /usr/local/bin/
-          
-          # Verify installation
-          which git-xet
-          git-xet --version
-          
-          # Configure git-xet
-          git xet install
-
-      # --------------------------------------------------
-      # Authenticate Xet with Hugging Face
-      # --------------------------------------------------
-      - name: Login to Xet (Hugging Face)
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          git xet login --user "daniel-was-taken" --email "actions@github.com" --password "$HF_TOKEN" --host huggingface.co
+      - name: Install Git LFS
+        run: git lfs install
 
       # --------------------------------------------------
       # Git configuration
@@ -67,7 +46,7 @@ jobs:
           git pull hf main --allow-unrelated-histories --no-rebase
 
       # --------------------------------------------------
-      # Push to Hugging Face (Xet handles binaries)
+      # Push to Hugging Face (Git LFS handles large files)
       # --------------------------------------------------
       - name: Push to Hugging Face
         run: |
