@@ -23,7 +23,7 @@ jobs:
           curl -L -o git-xet.tar.gz https://github.com/xetdata/xet-tools/releases/latest/download/xet-linux-x86_64.tar.gz
           sudo tar -xzf git-xet.tar.gz -C /usr/local/bin/
           git-xet --version
-          git xet install --force
+          git xet install
 
       # --------------------------------------------------
       # Authenticate git-xet against Hugging Face
