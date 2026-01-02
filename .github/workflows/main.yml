@@ -11,9 +11,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0
-          lfs: true
-      - name: Push to hub
+          fetch-depth: 0  # Keeps full history for better merging
+          lfs: true       # Good if your repo uses Git LFS (e.g., for models/datasets)
+      
+      - name: Add Hugging Face remote
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI main
+        run: git remote add hf https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI
+      
+      - name: Pull from Hugging Face
+        run: git pull hf main --allow-unrelated-histories  # Merges HF changes; use --allow-unrelated-histories if histories differ (common on first sync)
+      
+      - name: Push to Hugging Face
+        run: git push hf main
