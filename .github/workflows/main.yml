@@ -16,13 +16,23 @@ jobs:
           fetch-depth: 0
 
       # --------------------------------------------------
-      # Install Git LFS (Standard for Hugging Face)
+      # Install git-xet (required by Hugging Face Spaces for binaries)
       # --------------------------------------------------
-      - name: Install Git LFS
+      - name: Install git-xet
         run: |
-          git lfs install
-          # Ensure LFS points to Hugging Face so GitHub LFS is not needed
-          git config lfs.url https://huggingface.co/spaces/daniel-was-taken/CompifAI.git/info/lfs
+          curl -L -o git-xet.tar.gz https://github.com/xetdata/xet-tools/releases/latest/download/xet-linux-x86_64.tar.gz
+          sudo tar -xzf git-xet.tar.gz -C /usr/local/bin/
+          git-xet --version
+          git xet install --force
+
+      # --------------------------------------------------
+      # Authenticate git-xet against Hugging Face
+      # --------------------------------------------------
+      - name: Login to Xet (Hugging Face)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git xet login --user "daniel-was-taken" --email "actions@github.com" --password "$HF_TOKEN" --host huggingface.co
 
       # --------------------------------------------------
       # Git configuration
@@ -33,7 +43,7 @@ jobs:
           git config --global user.email "actions@github.com"
 
       # --------------------------------------------------
-      # Add Hugging Face remote
+      # Add Hugging Face remote (credentials for git-xet)
       # --------------------------------------------------
       - name: Add Hugging Face remote
         env:
@@ -42,15 +52,15 @@ jobs:
           git remote add hf https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI.git
 
       # --------------------------------------------------
-      # Pull from Hugging Face (safe merge)
+      # Re-encode binaries through git-xet filters and push to HF
+      # (keeps GitHub history untouched; commit exists only in this job)
       # --------------------------------------------------
-      - name: Pull from Hugging Face
+      - name: Push to Hugging Face via Xet
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git pull hf main --allow-unrelated-histories --no-rebase
-
-      # --------------------------------------------------
-      # Push to Hugging Face (Git LFS handles large files)
-      # --------------------------------------------------
-      - name: Push to Hugging Face
-        run: |
-          git push hf main
+          # Reapply clean filters so binaries are stored via xet
+          git add --renormalize data || true
+          git status
+          git commit -m "ci: xet-encode binaries for HF" || true
+          git push hf HEAD:main
