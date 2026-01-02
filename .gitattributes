@@ -1,3 +1,4 @@
+# XET LOCK
 # Store binary docs via git-xet on push to Hugging Face
 *.pdf filter=xet -text
 *.docx filter=xet -text
