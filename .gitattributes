@@ -1,7 +1,8 @@
 # Store binary docs via git-xet on push to Hugging Face
 *.pdf filter=xet -text
 *.docx filter=xet -text
-*.pptx filter=xet -text*.7z filter=lfs diff=lfs merge=lfs -text
+*.pptx filter=xet -text
+*.7z filter=lfs diff=lfs merge=lfs -text
 *.arrow filter=lfs diff=lfs merge=lfs -text
 *.bin filter=lfs diff=lfs merge=lfs -text
 *.bz2 filter=lfs diff=lfs merge=lfs -text

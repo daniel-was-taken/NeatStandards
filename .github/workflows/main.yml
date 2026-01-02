@@ -51,6 +51,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git remote add hf https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI.git
+          git remote add upstream_xet_repo https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI.git || true
 
       # --------------------------------------------------
       # Re-encode binaries through git-xet filters and push to HF
@@ -60,6 +61,9 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          # Initialize xet metadata against upstream
+          git xet init --force || true
+          git restore --source=HEAD :/ || true
           # Reapply clean filters so binaries are stored via xet
           git add --renormalize data .gitattributes || true
           git status
