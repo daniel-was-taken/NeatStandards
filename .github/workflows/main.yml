@@ -16,12 +16,22 @@ jobs:
           fetch-depth: 0
 
       # --------------------------------------------------
-      # Install Xet (required by Hugging Face for binaries)
+      # Install Xet (Manual Install)
       # --------------------------------------------------
       - name: Install Xet
         run: |
-          curl -fsSL https://xetdata.com/install.sh | bash
-          echo "$HOME/.xet/bin" >> $GITHUB_PATH
+          # Download the latest release
+          curl -L -o git-xet.tar.gz https://github.com/xetdata/xet-tools/releases/latest/download/xet-linux-x86_64.tar.gz
+          
+          # Extract to /usr/local/bin (requires sudo)
+          sudo tar -xzf git-xet.tar.gz -C /usr/local/bin/
+          
+          # Verify installation
+          which git-xet
+          git-xet --version
+          
+          # Configure git-xet
+          git xet install
 
       # --------------------------------------------------
       # Authenticate Xet with Hugging Face
@@ -30,14 +40,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # Add to PATH for this step
-          export PATH=$HOME/.xet/bin:$PATH
-          
-          # Configure git-xet for the repository
-          "$HOME/.xet/bin/git-xet" install
-          
-          # Login
-          echo "$HF_TOKEN" | "$HOME/.xet/bin/git-xet" login --token-stdin
+          echo "$HF_TOKEN" | git xet login --token-stdin
 
       # --------------------------------------------------
       # Git configuration
