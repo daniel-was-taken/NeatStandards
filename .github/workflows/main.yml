@@ -19,7 +19,10 @@ jobs:
       # Install Git LFS (Standard for Hugging Face)
       # --------------------------------------------------
       - name: Install Git LFS
-        run: git lfs install
+        run: |
+          git lfs install
+          # Ensure LFS points to Hugging Face so GitHub LFS is not needed
+          git config lfs.url https://huggingface.co/spaces/daniel-was-taken/CompifAI.git/info/lfs
 
       # --------------------------------------------------
       # Git configuration
