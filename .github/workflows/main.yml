@@ -1,31 +1,64 @@
 name: Sync to Hugging Face hub
+
 on:
   push:
     branches: [main]
-  # to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
   sync-to-hub:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Keeps full history for better merging
-          lfs: true       # Good if your repo uses Git LFS (e.g., for models/datasets)
-      
-      - name: Add Hugging Face remote
+          fetch-depth: 0
+
+      # --------------------------------------------------
+      # Install Xet (required by Hugging Face for binaries)
+      # --------------------------------------------------
+      - name: Install Xet
+        run: |
+          curl -fsSL https://xetdata.com/install.sh | bash
+          echo "$HOME/.xet/bin" >> $GITHUB_PATH
+
+      # --------------------------------------------------
+      # Authenticate Xet with Hugging Face
+      # --------------------------------------------------
+      - name: Login to Xet (Hugging Face)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git remote add hf https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI.git
-      
+        run: |
+          echo "$HF_TOKEN" | xet login --token-stdin
+
+      # --------------------------------------------------
+      # Git configuration
+      # --------------------------------------------------
       - name: Configure Git User
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-      
+
+      # --------------------------------------------------
+      # Add Hugging Face remote
+      # --------------------------------------------------
+      - name: Add Hugging Face remote
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git remote add hf https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI.git
+
+      # --------------------------------------------------
+      # Pull from Hugging Face (safe merge)
+      # --------------------------------------------------
       - name: Pull from Hugging Face
-        run: git pull hf main --allow-unrelated-histories --no-rebase  # Merge strategy to reconcile unrelated histories
-      
+        run: |
+          git pull hf main --allow-unrelated-histories --no-rebase
+
+      # --------------------------------------------------
+      # Push to Hugging Face (Xet handles binaries)
+      # --------------------------------------------------
       - name: Push to Hugging Face
-        run: git push hf main
+        run: |
+          git push hf main
