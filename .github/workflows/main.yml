@@ -8,65 +8,27 @@ on:
 jobs:
   sync-to-hub:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          lfs: true
 
-      # --------------------------------------------------
-      # Install git-xet (required by Hugging Face Spaces for binaries)
-      # --------------------------------------------------
-      - name: Install git-xet
-        run: |
-          curl -L -o git-xet.tar.gz https://github.com/xetdata/xet-tools/releases/latest/download/xet-linux-x86_64.tar.gz
-          sudo tar -xzf git-xet.tar.gz -C /usr/local/bin/
-          git-xet --version
-          git xet install
-          rm -f git-xet.tar.gz
-
-      # --------------------------------------------------
-      # Authenticate git-xet against Hugging Face
-      # --------------------------------------------------
-      - name: Login to Xet (Hugging Face)
+      - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          # REPLACE 'daniel-was-taken' with your actual HF username
+          # REPLACE 'CompifAI' with your actual Space name
         run: |
-          git xet login --user "daniel-was-taken" --email "actions@github.com" --password "$HF_TOKEN" --host huggingface.co --force
-
-      # --------------------------------------------------
-      # Git configuration
-      # --------------------------------------------------
-      - name: Configure Git User
-        run: |
-          git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-
-      # --------------------------------------------------
-      # Add Hugging Face remote (credentials for git-xet)
-      # --------------------------------------------------
-      - name: Add Hugging Face remote
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          git remote add hf https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI.git
-          git remote add upstream_xet_repo https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI.git || true
-
-      # --------------------------------------------------
-      # Re-encode binaries through git-xet filters and push to HF
-      # (keeps GitHub history untouched; commit exists only in this job)
-      # --------------------------------------------------
-      - name: Push to Hugging Face via Xet
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          # Initialize xet metadata against upstream
-          git xet init --force || true
-          git restore --source=HEAD :/ || true
-          # Reapply clean filters so binaries are stored via xet
-          git add --renormalize data .gitattributes || true
-          git status
-          git commit -m "ci: xet-encode binaries for HF" || true
-          git fetch hf main || true
-          git push hf HEAD:main --force-with-lease
+          git config --global user.name "GitHub Actions"
+          
+          # Force LFS tracking for PDFs just in case .gitattributes was missed
+          git lfs install
+          git lfs track "*.pdf"
+          git add .gitattributes
+          
+          # Add the remote and push
+          git remote add hf https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI
+          git push hf main --force
