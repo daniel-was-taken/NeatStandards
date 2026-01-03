@@ -18,17 +18,31 @@ jobs:
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          # REPLACE 'daniel-was-taken' with your actual HF username
-          # REPLACE 'CompifAI' with your actual Space name
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
           
-          # Force LFS tracking for PDFs just in case .gitattributes was missed
+          # 1. Install LFS
           git lfs install
+          
+          # 2. Track ALL binary formats shown in your error log
           git lfs track "*.pdf"
+          git lfs track "*.docx"
+          git lfs track "*.pptx"
+          git lfs track "*.doc"
+          
+          # 3. Add .gitattributes to the commit
           git add .gitattributes
           
-          # Add the remote and push
+          # 4. CRITICAL STEP: Renormalize
+          # This forces Git to re-read all files and apply the new LFS rules,
+          # converting the existing "fat" binaries into small LFS pointers.
+          git add --renormalize .
+          
+          # 5. Commit the conversion (if there are changes)
+          # We use "|| true" so it doesn't fail if everything was already correct
+          git commit -m "Convert binaries to LFS for HF Sync" || true
+          
+          # 6. Push to Hugging Face
           git remote add hf https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI
-          git push hf main --force
+          git push hf HEAD:main --force
