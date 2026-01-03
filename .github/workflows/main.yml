@@ -13,7 +13,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          lfs: true
 
       - name: Push to hub
         env:
@@ -22,27 +21,24 @@ jobs:
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
           
-          # 1. Install LFS
+          # 1. Install LFS and track the extensions
           git lfs install
-          
-          # 2. Track ALL binary formats shown in your error log
           git lfs track "*.pdf"
           git lfs track "*.docx"
           git lfs track "*.pptx"
           git lfs track "*.doc"
-          
-          # 3. Add .gitattributes to the commit
           git add .gitattributes
           
-          # 4. CRITICAL STEP: Renormalize
-          # This forces Git to re-read all files and apply the new LFS rules,
-          # converting the existing "fat" binaries into small LFS pointers.
-          git add --renormalize .
+          # 2. The "Hard Reset" Strategy
+          # We remove the files from Git's tracking and add them back 
+          # specifically as LFS pointers to ensure no binary data remains.
+          git rm -r --cached .
+          git add .
           
-          # 5. Commit the conversion (if there are changes)
-          # We use "|| true" so it doesn't fail if everything was already correct
-          git commit -m "Convert binaries to LFS for HF Sync" || true
+          # 3. Commit the "Clean" state
+          git commit -m "ci: force lfs migration for all binaries" || true
           
-          # 6. Push to Hugging Face
+          # 4. Push with the --force flag to overwrite the remote history
+          # This clears out the "binary blobs" Hugging Face is complaining about.
           git remote add hf https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI
-          git push hf HEAD:main --force
+          git push hf main --force
