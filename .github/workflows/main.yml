@@ -21,24 +21,15 @@ jobs:
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
           
-          # 1. Install LFS and track the extensions
-          git lfs install
-          git lfs track "*.pdf"
-          git lfs track "*.docx"
-          git lfs track "*.pptx"
-          git lfs track "*.doc"
-          git add .gitattributes
+          # Remove data/ directory from entire Git history
+          git filter-branch --force --index-filter \
+            'git rm -r --cached --ignore-unmatch data/' \
+            --prune-empty --tag-name-filter cat -- --all
           
-          # 2. The "Hard Reset" Strategy
-          # We remove the files from Git's tracking and add them back 
-          # specifically as LFS pointers to ensure no binary data remains.
-          git rm -r --cached .
-          git add .
+          # Force garbage collection to clean up
+          git reflog expire --expire=now --all
+          git gc --prune=now --aggressive
           
-          # 3. Commit the "Clean" state
-          git commit -m "ci: force lfs migration for all binaries" || true
-          
-          # 4. Push with the --force flag to overwrite the remote history
-          # This clears out the "binary blobs" Hugging Face is complaining about.
+          # Add Hugging Face remote and force push clean history
           git remote add hf https://daniel-was-taken:$HF_TOKEN@huggingface.co/spaces/daniel-was-taken/CompifAI
           git push hf main --force
