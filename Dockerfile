@@ -4,6 +4,8 @@ FROM python:3.12-slim
 # Set the working directory in the container
 WORKDIR /app
 
+ENV PYTHONUNBUFFERED=1
+
 # Install system dependencies required for sentence-transformers and OpenCV
 RUN apt-get update && apt-get install -y \
     libgl1 \
@@ -27,15 +29,15 @@ RUN chmod +x entrypoint.sh
 EXPOSE 8000
 
 # Run the entrypoint script when the container launches
-ENTRYPOINT ["./entrypoint.sh"]
+# ENTRYPOINT ["./entrypoint.sh"]
 
 # Make port 8000 available to the world outside this container
 # EXPOSE 8000
 
 # Define environment variable
-# ENV CHAINLIT_HOST=0.0.0.0
-# ENV CHAINLIT_PORT=8000
+ENV CHAINLIT_HOST=0.0.0.0
+ENV CHAINLIT_PORT=8000
 
 # Run app.py when the container launches
 # CMD ["chainlit", "run", "app.py"]
-# CMD chainlit run app.py --host 0.0.0.0 --port ${PORT:-8000} --headless
+CMD ["sh", "-c", "chainlit run app.py --host 0.0.0.0 --port ${PORT:-8000} --headless"]
