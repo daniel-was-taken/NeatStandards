@@ -32,7 +32,7 @@ from chainlit.input_widget import Select, Switch, Slider
 from langchain_core.documents import Document
 from typing_extensions import List
 
-from populate_db import main
+# from populate_db import main
 
 # Initialize Milvus client and embedding model
 MILVUS_URI = os.getenv("MILVUS_URI", "http://localhost:19530")
