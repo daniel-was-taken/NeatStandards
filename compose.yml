@@ -84,12 +84,4 @@ services:
     
     # Memory constraints for 4GB DigitalOcean droplet
     # Allocate 1.5GB to app, leaving room for Milvus and system
-    mem_limit: 1536m
-    memswap_limit: 1536m
     
-    # depends_on:
-    #   - standalone
-
-networks:
-  default:
-    name: milvus
