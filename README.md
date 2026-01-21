@@ -10,8 +10,6 @@ license: apache-2.0
 
 # Competence Standards RAG Chatbot
 
-A Retrieval-Augmented Generation (RAG) chatbot designed to assist in writing competence standards in higher education. This application uses Chainlit for the user interface, Milvus for vector storage, and Nebius AI for embeddings and chat completion.
-
 ## 📋 Table of Contents
 
 - [About the Project](#about-the-project)
